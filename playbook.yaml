@@ -1,0 +1,32 @@
+- hosts: 192.168.0.244
+  become: yes
+  vars:
+    - app_directory: ./testapp/
+  tasks:
+    - name: Install docker|docker-compose
+      package:
+        name: docker-compose
+
+    - name: ensures {{ app_directory }} dir exists
+      file:
+        path: "{{ app_directory }}"
+        state: directory
+
+    - name: Copy files
+      copy:
+        dest: "{{ app_directory }}{{ item }}"
+        src: "app/{{ item }}"
+      loop:
+        - docker-compose.yml
+        - etc/
+        - web/
+
+#    - name: Run and restart if neccesary
+#      community.docker.docker_compose:
+#        project_src: "{{ app_directory }}"
+#        restarted: true
+
+    - name: Run and restart if neccesary
+      shell: "docker-compose up -d --force-recreate"
+      args:
+        chdir: "{{ app_directory }}"
